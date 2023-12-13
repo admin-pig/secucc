@@ -60,10 +60,12 @@
     }
 
     function drop(event) {
-        event.preventDefault();
-        const targetFrame = event.target.closest('.frame');
+    event.preventDefault();
+    const targetFrame = event.target.closest('.frame');
+    if (targetFrame && draggedFrame) {
         swapFrames(draggedFrame, targetFrame);
     }
+}
 
     function swapFrames(frame1, frame2) {
         const parent = frame1.parentNode;

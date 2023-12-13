@@ -14,12 +14,14 @@
             margin: 10px;
             float: left;
         }
-        
+
         .header {
             text-align: center;
             background-color: #f0f0f0;
             padding: 5px;
             font-weight: bold;
+            cursor: grab;
+            user-select: none;
         }
 
         .video {
@@ -31,18 +33,18 @@
 </head>
 <body>
 
-<div class="frame" id="frame1">
-    <div class="header">프레임 1</div>
+<div class="frame" id="frame1" draggable="true" ondragstart="startDrag(event)">
+    <div class="header" onmousedown="startDrag(event)">프레임 1</div>
     <video class="video" controls autoplay muted>
-        <source src="https://www.shutterstock.com/shutterstock/videos/1028310428/preview/stock-footage-cctv-security-camera-security.webm" type="video/webm">
+        <source src="https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
 </div>
 
-<div class="frame" id="frame2">
-    <div class="header">프레임 2</div>
+<div class="frame" id="frame2" draggable="true" ondragstart="startDrag(event)">
+    <div class="header" onmousedown="startDrag(event)">프레임 2</div>
     <video class="video" controls autoplay muted>
-        <source src="https://www.shutterstock.com/shutterstock/videos/1093929207/preview/stock-footage-happy-family-father-teaches-daughter-to-ride-bike-in-park-daughter-riding-bike-for-first-time.webm" type="video/webm">
+        <source src="https://www.sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
 </div>
@@ -51,36 +53,52 @@
     let draggedFrame;
 
     function startDrag(event) {
-        draggedFrame = event.target.closest('.frame');
-        event.dataTransfer.setData('text/plain', null);
-    }
-
-    function allowDrop(event) {
         event.preventDefault();
-    }
+        draggedFrame = event.target.closest('.frame');
+        if (draggedFrame) {
+            draggedFrame.style.zIndex = 1;
+            const rect = draggedFrame.getBoundingClientRect();
+            const offsetX = event.clientX - rect.left;
+            const offsetY = event.clientY - rect.top;
 
-    function drop(event) {
-    event.preventDefault();
-    const targetFrame = event.target.closest('.frame');
-    if (targetFrame && draggedFrame) {
-        swapFrames(draggedFrame, targetFrame);
-    }
-}
+            function handleDragMove(moveEvent) {
+                draggedFrame.style.left = moveEvent.clientX - offsetX + 'px';
+                draggedFrame.style.top = moveEvent.clientY - offsetY + 'px';
+            }
 
-    function swapFrames(frame1, frame2) {
-        const parent = frame1.parentNode;
-        const index1 = Array.from(parent.children).indexOf(frame1);
-        const index2 = Array.from(parent.children).indexOf(frame2);
-        parent.insertBefore(frame1, frame2);
-        if (index1 < index2) {
-            parent.insertBefore(frame2, parent.children[index1]);
-        } else {
-            parent.insertBefore(frame2, parent.children[index1 + 1]);
+            function handleDragEnd(endEvent) {
+                draggedFrame.style.zIndex = '';
+                document.removeEventListener('mousemove', handleDragMove);
+                document.removeEventListener('mouseup', handleDragEnd);
+
+                const targetFrame = document.elementFromPoint(endEvent.clientX, endEvent.clientY).closest('.frame');
+                if (targetFrame && targetFrame !== draggedFrame) {
+                    swapFrames(draggedFrame, targetFrame);
+                }
+            }
+
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('mouseup', handleDragEnd);
         }
     }
 
-    document.addEventListener('dragover', allowDrop);
-    document.addEventListener('drop', drop);
+    function swapFrames(frame1, frame2) {
+        const parent = frame1.parentNode;
+        const rect1 = frame1.getBoundingClientRect();
+        const rect2 = frame2.getBoundingClientRect();
+
+        const temp = document.createElement('div');
+        parent.insertBefore(temp, frame1);
+        parent.insertBefore(frame1, frame2);
+        parent.insertBefore(frame2, temp);
+        parent.removeChild(temp);
+
+        frame1.style.left = rect2.left - parent.getBoundingClientRect().left + 'px';
+        frame1.style.top = rect2.top - parent.getBoundingClientRect().top + 'px';
+
+        frame2.style.left = rect1.left - parent.getBoundingClientRect().left + 'px';
+        frame2.style.top = rect1.top - parent.getBoundingClientRect().top + 'px';
+    }
 </script>
 
 </body>

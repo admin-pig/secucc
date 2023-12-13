@@ -8,28 +8,39 @@
         .frame {
             position: relative;
             overflow: hidden;
-            width: 800px;
-            height: 600px;
+            width: 400px;
+            height: 300px;
             border: 1px solid #ccc;
+            margin: 10px;
+            float: left;
+        }
+        
+        .header {
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 5px;
+            font-weight: bold;
         }
 
         .video {
             width: 100%;
             height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
+            object-fit: cover;
         }
     </style>
 </head>
 <body>
 
-<div class="frame" onmousedown="startDrag(event)" onmouseup="stopDrag()">
+<div class="frame" id="frame1">
+    <div class="header">프레임 1</div>
     <video class="video" controls autoplay muted>
         <source src="https://www.shutterstock.com/shutterstock/videos/1028310428/preview/stock-footage-cctv-security-camera-security.webm" type="video/webm">
         Your browser does not support the video tag.
     </video>
+</div>
 
+<div class="frame" id="frame2">
+    <div class="header">프레임 2</div>
     <video class="video" controls autoplay muted>
         <source src="https://www.shutterstock.com/shutterstock/videos/1093929207/preview/stock-footage-happy-family-father-teaches-daughter-to-ride-bike-in-park-daughter-riding-bike-for-first-time.webm" type="video/webm">
         Your browser does not support the video tag.
@@ -37,39 +48,37 @@
 </div>
 
 <script>
-    let isDragging = false;
-    let offsetX, offsetY;
+    let draggedFrame;
 
     function startDrag(event) {
-        isDragging = true;
-        const frame = document.querySelector('.frame');
-        const frameRect = frame.getBoundingClientRect();
-        offsetX = event.clientX - frameRect.left;
-        offsetY = event.clientY - frameRect.top;
-        moveVideos(event);
+        draggedFrame = event.target.closest('.frame');
+        event.dataTransfer.setData('text/plain', null);
     }
 
-    function stopDrag() {
-        isDragging = false;
+    function allowDrop(event) {
+        event.preventDefault();
     }
 
-    function moveVideos(event) {
-        if (isDragging) {
-            const videos = document.querySelectorAll('.video');
-            const frame = document.querySelector('.frame');
+    function drop(event) {
+        event.preventDefault();
+        const targetFrame = event.target.closest('.frame');
+        swapFrames(draggedFrame, targetFrame);
+    }
 
-            const x = event.clientX - offsetX - frame.getBoundingClientRect().left;
-            const y = event.clientY - offsetY - frame.getBoundingClientRect().top;
-
-            videos.forEach(video => {
-                video.style.left = `${x}px`;
-                video.style.top = `${y}px`;
-            });
+    function swapFrames(frame1, frame2) {
+        const parent = frame1.parentNode;
+        const index1 = Array.from(parent.children).indexOf(frame1);
+        const index2 = Array.from(parent.children).indexOf(frame2);
+        parent.insertBefore(frame1, frame2);
+        if (index1 < index2) {
+            parent.insertBefore(frame2, parent.children[index1]);
+        } else {
+            parent.insertBefore(frame2, parent.children[index1 + 1]);
         }
     }
 
-    document.addEventListener('mousemove', moveVideos);
-    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('dragover', allowDrop);
+    document.addEventListener('drop', drop);
 </script>
 
 </body>

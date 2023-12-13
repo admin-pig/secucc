@@ -5,14 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>동영상 스트리밍</title>
     <style>
-        .video-container {
+        .frame {
             position: relative;
             overflow: hidden;
+            width: 800px;
+            height: 600px;
+            border: 1px solid #ccc;
         }
 
         .video {
-            width: 800px;
-            height: 600px;
+            width: 100%;
+            height: 100%;
             position: absolute;
             top: 0;
             left: 0;
@@ -21,7 +24,7 @@
 </head>
 <body>
 
-<div class="video-container" onmousedown="startDrag(event)" onmouseup="stopDrag()">
+<div class="frame" onmousedown="startDrag(event)" onmouseup="stopDrag()">
     <video class="video" controls autoplay muted>
         <source src="https://www.shutterstock.com/shutterstock/videos/1028310428/preview/stock-footage-cctv-security-camera-security.webm" type="video/webm">
         Your browser does not support the video tag.
@@ -35,9 +38,14 @@
 
 <script>
     let isDragging = false;
+    let offsetX, offsetY;
 
     function startDrag(event) {
         isDragging = true;
+        const frame = document.querySelector('.frame');
+        const frameRect = frame.getBoundingClientRect();
+        offsetX = event.clientX - frameRect.left;
+        offsetY = event.clientY - frameRect.top;
         moveVideos(event);
     }
 
@@ -48,18 +56,14 @@
     function moveVideos(event) {
         if (isDragging) {
             const videos = document.querySelectorAll('.video');
-            const container = document.querySelector('.video-container');
+            const frame = document.querySelector('.frame');
 
-            const containerRect = container.getBoundingClientRect();
-            const mouseX = event.clientX - containerRect.left;
-            const mouseY = event.clientY - containerRect.top;
+            const x = event.clientX - offsetX - frame.getBoundingClientRect().left;
+            const y = event.clientY - offsetY - frame.getBoundingClientRect().top;
 
             videos.forEach(video => {
-                const x = (mouseX / containerRect.width) * 100;
-                const y = (mouseY / containerRect.height) * 100;
-
-                video.style.left = `${x}%`;
-                video.style.top = `${y}%`;
+                video.style.left = `${x}px`;
+                video.style.top = `${y}px`;
             });
         }
     }
